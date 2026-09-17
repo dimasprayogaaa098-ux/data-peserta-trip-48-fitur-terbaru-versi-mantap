@@ -18,7 +18,35 @@ const participants=[{"No Peserta": "P001", "Nama": "Fauzan Pratama", "Perusahaan
 const esc=x=>String(x??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
 function show(id){['list','detail','scan'].forEach(x=>document.getElementById(x).classList.toggle('hidden',x!==id));if(id==='scan')startScan();}
 function render(){let q=document.getElementById('q').value.toLowerCase();let rows=participants.filter(p=>Object.values(p).join(' ').toLowerCase().includes(q));document.getElementById('cards').innerHTML=rows.map(p=>`<div class="card"><h3>${esc(p.Nama)}</h3><p>${esc(p['No Peserta'])} • ${esc(p['Perusahaan/Divisi'])}</p><p>${esc(p.Bus)} / Seat ${esc(p.Seat)}</p><button onclick="detail('${esc(p['No Peserta'])}')">Detail + QR</button></div>`).join('');}
-function detail(id){let p=participants.find(x=>x['No Peserta']===id);show('detail');document.getElementById('detail').innerHTML='<button onclick="show(\\'list\\')">← Kembali</button><h2>'+esc(p.Nama)+'</h2><table>'+Object.entries(p).map(([k,v])=>'<tr><th>'+esc(k)+'</th><td>'+esc(v)+'</td></tr>').join('')+'</table><h3 style="text-align:center">QR Code Pribadi</h3><div id="qr"></div>';new QRCode(document.getElementById('qr'),{text:id,width:220,height:220});}
+function detail(id) {
+  let p = participants.find(x => x['No Peserta'] === id);
+
+  show('detail');
+
+  document.getElementById('detail').innerHTML = `
+    <button onclick="show('list')">← Kembali</button>
+    <h2>${esc(p.Nama)}</h2>
+    <table>
+      ${Object.entries(p)
+        .map(([k, v]) => `
+          <tr>
+            <th>${esc(k)}</th>
+            <td>${esc(v)}</td>
+          </tr>
+        `)
+        .join('')}
+    </table>
+
+    <h3 style="text-align:center">QR Code Pribadi</h3>
+    <div id="qr"></div>
+  `;
+
+  new QRCode(document.getElementById('qr'), {
+    text: id,
+    width: 220,
+    height: 220
+  });
+}
 let scanner=null;
 async function startScan(){if(scanner)return;scanner=new Html5Qrcode('reader');try{await scanner.start({facingMode:'environment'},{fps:10,qrbox:250},text=>{document.getElementById('result').innerHTML='<b>QR terbaca: '+esc(text)+'</b><p>Untuk penyimpanan online, hubungkan fungsi ini ke Firebase Firestore.</p>';scanner.stop();scanner=null;},()=>{});}catch(e){document.getElementById('result').textContent='Kamera gagal dibuka: '+e.message;}}
 document.getElementById('q').addEventListener('input',render);render();
