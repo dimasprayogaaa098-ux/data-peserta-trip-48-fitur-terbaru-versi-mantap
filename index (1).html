@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Data Peserta Trip 48</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f8fafc;color:#172033}header{background:#F88A08;color:#fff;padding:32px 24px}header h1{margin:0 0 12px;font-size:36px}header p{margin:0;font-size:18px}main{width:min(1100px,100%);margin:auto;padding:20px}.panel{background:#fff;border:1px solid #e5e7eb;border-radius:14px;padding:20px;margin-bottom:18px;box-shadow:0 2px 5px rgba(0,0,0,.04)}.nav{display:flex;flex-wrap:wrap;gap:10px}button{border:0;border-radius:9px;padding:12px 16px;background:#F88A08;color:#fff;font-size:15px;font-weight:bold;cursor:pointer}button:hover{background:#d96f00}button.secondary{background:#e2e8f0;color:#172033}.hidden{display:none!important}input{width:100%;max-width:600px;padding:12px;border:1px solid #cbd5e1;border-radius:9px;font-size:16px;margin:12px 0}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px}.card{border:1px solid #e5e7eb;border-radius:12px;padding:16px;background:#fff}.card h3{margin:0 0 8px}.card p{margin:5px 0;color:#475569}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{text-align:left;padding:10px;border-bottom:1px solid #e5e7eb;vertical-align:top}th{width:180px;color:#475569}#qr{display:flex;justify-content:center;margin:20px 0}#reader{width:100%;max-width:500px;margin:15px auto}#result{margin-top:15px;padding:12px;border-radius:8px;background:#fff7ed;min-height:20px}.muted{color:#64748b}@media(max-width:600px){header h1{font-size:28px}header p{font-size:15px}main{padding:12px}.panel{padding:15px}th{width:120px}}
+</style>
+</head>
+<body>
+<header><h1>Data Peserta Trip 48</h1><p>Data peserta • QR pribadi • Absensi online</p></header>
+<main>
+<section class="panel"><div class="nav"><button type="button" id="btnList">Daftar Peserta</button><button type="button" id="btnScan">Scan Absensi</button></div></section>
+<section id="list" class="panel"><h2>Daftar Peserta</h2><p class="muted">Cari nama, nomor peserta, bus, atau seat.</p><input id="q" type="search" placeholder="Cari peserta..." autocomplete="off"><div id="cards" class="grid"></div></section>
+<section id="detail" class="panel hidden"></section>
+<section id="scan" class="panel hidden"><h2>Scan QR Absensi</h2><p class="muted">Tekan tombol untuk mengaktifkan kamera.</p><div class="nav"><button type="button" id="btnStartCamera">Mulai Kamera</button><button type="button" id="btnStopCamera" class="secondary">Matikan Kamera</button></div><div id="reader"></div><div id="result" aria-live="polite"></div></section>
+</main>
+<script>
+'use strict';
+const participants=[
+{"No Peserta":"P001","Nama":"Fauzan Pratama","Perusahaan/Divisi":"Produksi","No HP":"084332181960","Bus":"Bus 01","Seat":"1A","TL":"Rizal","Driver":"Budi","Hotel":"Hotel A","Check-in":"Aktif"},
+{"No Peserta":"P002","Nama":"Riska Amelia","Perusahaan/Divisi":"Marketing","No HP":"082145678900","Bus":"Bus 01","Seat":"1B","TL":"Rizal","Driver":"Budi","Hotel":"Hotel A","Check-in":"Aktif"},
+{"No Peserta":"P003","Nama":"Dimas Prakoso","Perusahaan/Divisi":"IT","No HP":"081299887766","Bus":"Bus 02","Seat":"2A","TL":"Rizal","Driver":"Budi","Hotel":"Hotel B","Check-in":"Belum"}
+];
+const $=id=>document.getElementById(id);
+let scanner=null,scannerRunning=false;
+function esc(value){return String(value??'').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;')}
+function show(id){['list','detail','scan'].forEach(name=>$(name).classList.toggle('hidden',name!==id));}
+function render(){const query=$('q').value.trim().toLowerCase();const rows=participants.filter(p=>Object.values(p).join(' ').toLowerCase().includes(query));$('cards').innerHTML=rows.length?rows.map(p=>`<article class="card"><h3>${esc(p['Nama'])}</h3><p><strong>${esc(p['No Peserta'])}</strong></p><p>${esc(p['Perusahaan/Divisi'])}</p><p>${esc(p['Bus'])} • Seat ${esc(p['Seat'])}</p><button type="button" class="btnDetail" data-id="${esc(p['No Peserta'])}">Detail + QR</button></article>`).join(''):'<div class="card">Data peserta tidak ditemukan.</div>';$('cards').querySelectorAll('.btnDetail').forEach(btn=>btn.addEventListener('click',()=>showDetail(btn.dataset.id)));}
+function showDetail(id){const p=participants.find(item=>item['No Peserta']===id);if(!p)return;show('detail');$('detail').innerHTML=`<button type="button" id="btnBack" class="secondary">← Kembali</button><h2>${esc(p['Nama'])}</h2><table>${Object.entries(p).map(([k,v])=>`<tr><th>${esc(k)}</th><td>${esc(v)}</td></tr>`).join('')}</table><h3 style="text-align:center">QR Code Pribadi</h3><div id="qr"></div>`;$('btnBack').addEventListener('click',()=>show('list'));if(typeof QRCode!=='undefined'){new QRCode($('qr'),{text:p['No Peserta'],width:220,height:220})}else{$('qr').textContent='QR Code belum dapat dimuat.'}}
+async function startScan(){if(scannerRunning)return;if(typeof Html5Qrcode==='undefined'){$('result').textContent='Library kamera belum dimuat. Refresh halaman.';return}scanner=new Html5Qrcode('reader');$('result').textContent='Meminta izin kamera...';try{await scanner.start({facingMode:'environment'},{fps:10,qrbox:250},text=>{$('result').innerHTML='<strong>QR terbaca:</strong> '+esc(text)},()=>{});scannerRunning=true;$('result').textContent='Kamera aktif. Arahkan kamera ke QR peserta.'}catch(error){scanner=null;scannerRunning=false;$('result').textContent='Kamera tidak bisa dibuka. Izinkan kamera dan gunakan HTTPS.'}}
+async function stopScan(){if(!scanner)return;try{if(scannerRunning)await scanner.stop();scanner.clear()}catch(error){console.warn(error)}scanner=null;scannerRunning=false;$('reader').innerHTML='';$('result').textContent='Kamera dimatikan.'}
+$('btnList').addEventListener('click',()=>show('list'));$('btnScan').addEventListener('click',()=>show('scan'));$('btnStartCamera').addEventListener('click',startScan);$('btnStopCamera').addEventListener('click',stopScan);$('q').addEventListener('input',render);render();
+</script>
+</body>
+</html>
